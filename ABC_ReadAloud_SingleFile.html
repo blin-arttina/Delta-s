@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ABC Read‑Aloud • English ⇄ Russian (Single File)</title>
+<style>
+:root{--bg:#0b0d12;--card:#111423;--ink:#f6f7fb;--muted:#b8c0d6}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans"}
+header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,rgba(11,13,18,.95),rgba(11,13,18,.6));backdrop-filter:blur(10px)}
+.wrap{max-width:1100px;margin:0 auto;padding:16px 20px}
+h1{font-size:clamp(22px,3vw,34px);margin:8px 0 4px}
+.sub{color:var(--muted);font-size:14px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 8px}
+button,select{background:linear-gradient(180deg,#1a2038,#141a2a);border:1px solid #263154;color:var(--ink);padding:10px 12px;border-radius:16px;font-weight:600;cursor:pointer}
+button:hover{border-color:#3550a3}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;padding:16px 0 40px}
+.card{background:linear-gradient(180deg,#12162a,#0f1426);border:1px solid #283054;border-radius:20px;padding:16px;display:grid;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.big{font-size:46px;font-weight:900;letter-spacing:.5px}
+.pair{display:flex;gap:10px;align-items:baseline}
+.pair .en,.pair .ru{display:grid}
+.pair small{color:var(--muted);font-size:12px}
+.emoji{font-size:54px;line-height:1.1;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
+.word{font-size:18px}
+.ruword{font-size:18px}
+.pron{font-size:13px;color:var(--muted)}
+.play{display:inline-flex;align-items:center;gap:8px}
+.play svg{width:18px;height:18px}
+.badge{background:linear-gradient(90deg,rgba(110,231,255,.15),rgba(181,136,255,.15));border:1px solid rgba(110,231,255,.35);padding:6px 10px;border-radius:999px;font-size:12px;color:#cde9ff}
+footer{color:var(--muted);text-align:center;padding:40px 0}
+.hint{font-size:12px;color:var(--muted)}
+.kp{border-top:1px dashed #2a3359;padding-top:6px;margin-top:2px}
+@media print{header,.toolbar,.hint,.badge,.play{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;background:#fff;border:1px solid #ddd;box-shadow:none}.grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>ABC Read‑Aloud • English ⇄ Russian</h1>
+    <div class="sub">Uppercase & lowercase letters, emoji images, Cyrillic with pronunciation, and one‑tap audio.</div>
+    <div class="toolbar">
+      <button id="playAll">▶ Play A–Z</button>
+      <button id="stopAll" disabled>■ Stop</button>
+      <label class="badge"><input id="autoAdvance" type="checkbox" checked> Auto‑advance</label>
+      <label class="badge">Voice: <select id="ruVoice"></select></label>
+      <span class="hint">Tip: if you don't hear Russian, choose a ru‑RU voice above.</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="cards" class="grid" aria-live="polite"></section>
+  <footer>Built for Tina • Works offline. Print with Ctrl/Cmd+P (audio only in HTML).</footer>
+</main>
+
+<script>
+const ABC=[
+{L:'A',emoji:'🍎',en:'Apple',ru:'Яблоко',pron:'YAH-bla-kah'},
+{L:'B',emoji:'🏀',en:'Ball',ru:'Мяч',pron:'myach'},
+{L:'C',emoji:'🐱',en:'Cat',ru:'Кот',pron:'koht'},
+{L:'D',emoji:'🐶',en:'Dog',ru:'Собака',pron:'sah-BAH-kah'},
+{L:'E',emoji:'🐘',en:'Elephant',ru:'Слон',pron:'slon'},
+{L:'F',emoji:'🐟',en:'Fish',ru:'Рыба',pron:'RIH-bah'},
+{L:'G',emoji:'🍇',en:'Grapes',ru:'Виноград',pron:'vee-nah-GRAHD'},
+{L:'H',emoji:'🏠',en:'House',ru:'Дом',pron:'dom'},
+{L:'I',emoji:'🍦',en:'Ice cream',ru:'Мороженое',pron:'mah-ROH-zhuh-nuh-yeh'},
+{L:'J',emoji:'🧃',en:'Juice',ru:'Сок',pron:'sok'},
+{L:'K',emoji:'🪁',en:'Kite',ru:'Воздушный змей',pron:'vaz-DOOSH-nee zmay'},
+{L:'L',emoji:'🦁',en:'Lion',ru:'Лев',pron:'lyev'},
+{L:'M',emoji:'🐭',en:'Mouse',ru:'Мышь',pron:'mysh'},
+{L:'N',emoji:'🪺',en:'Nest',ru:'Гнездо',pron:'gnyez-DOH'},
+{L:'O',emoji:'🍊',en:'Orange',ru:'Апельсин',pron:'ah-peel-SEEN'},
+{L:'P',emoji:'🐧',en:'Penguin',ru:'Пингвин',pron:'peeng-VEEN'},
+{L:'Q',emoji:'👑',en:'Queen',ru:'Королева',pron:'kah-rah-LYEH-vah'},
+{L:'R',emoji:'🐰',en:'Rabbit',ru:'Кролик',pron:'KROH-leek'},
+{L:'S',emoji:'☀️',en:'Sun',ru:'Солнце',pron:'SOHLN-tseh'},
+{L:'T',emoji:'🐯',en:'Tiger',ru:'Тигр',pron:'TEE-gr'},
+{L:'U',emoji:'☂️',en:'Umbrella',ru:'Зонт',pron:'zont'},
+{L:'V',emoji:'🎻',en:'Violin',ru:'Скрипка',pron:'SKREEP-kah'},
+{L:'W',emoji:'🍉',en:'Watermelon',ru:'Арбуз',pron:'ahr-BOOZ'},
+{L:'X',emoji:'🎶',en:'Xylophone',ru:'Ксилофон',pron:'ksee-lah-FOHN'},
+{L:'Y',emoji:'🐃',en:'Yak',ru:'Як',pron:'yahk'},
+{L:'Z',emoji:'🦓',en:'Zebra',ru:'Зебра',pron:'ZYE-brah'}
+];
+
+function ruPair(word){const f=(word||'').trim().charAt(0);return{up:f.toUpperCase(),low:f.toLowerCase()};}
+const container=document.getElementById('cards');
+ABC.forEach((item,i)=>{const enUp=item.L,enLow=item.L.toLowerCase();const {up:ruUp,low:ruLow}=ruPair(item.ru);const c=document.createElement('article');c.className='card';c.innerHTML=`
+<div class=row><div class=pair>
+ <div class=en><div class=big>${enUp}<span class=kp>${enLow}</span></div><small>English</small></div>
+ <div class=ru><div class=big>${ruUp}<span class=kp>${ruLow}</span></div><small>Русский</small></div>
+</div><button class=play data-i=${i}>▶</button></div>
+<div class=row><div class=emoji>${item.emoji}</div><span class=badge>${i+1}/26</span></div>
+<div class=word><b>${item.L}</b> is for <b>${item.en}</b></div>
+<div class=ruword><b>${ruUp}</b> — ${item.ru}</div>
+<div class=pron>sounds like: ${item.pron}</div>`;container.appendChild(c);});
+
+let voices=[];function loadVoices(){voices=speechSynthesis.getVoices();const sel=document.getElementById('ruVoice');sel.innerHTML='';const opts=voices.filter(v=>/ru/i.test(v.lang));if(!opts.length){sel.appendChild(new Option('no ru-RU voice',''));}else{opts.forEach(v=>sel.appendChild(new Option(v.name,v.name)));sel.value=opts[0].name;}}loadVoices();speechSynthesis.onvoiceschanged=loadVoices;
+function vByName(n){return voices.find(v=>v.name===n);}
+
+function speakCard(i){const it=ABC[i];if(!it)return Promise.resolve();const u1=new SpeechSynthesisUtterance(`${it.L}, ${it.en}.`);u1.lang='en-US';const {up:ruUp}=ruPair(it.ru);const u2=new SpeechSynthesisUtterance(`${ruUp}, ${it.ru}.`);const v=vByName(document.getElementById('ruVoice').value);if(v){u2.voice=v;u2.lang=v.lang;}else u2.lang='ru-RU';const u3=new SpeechSynthesisUtterance(it.pron);u3.lang='en-US';return new Promise(r=>{let idx=0;const seq=[u1,u2,u3];function next(){if(idx>=seq.length){r();return;}const u=seq[idx++];u.onend=next;u.onerror=next;speechSynthesis.speak(u);}next();});}
+
+document.addEventListener('click',e=>{if(e.target.classList.contains('play'))speakCard(+e.target.dataset.i);});
+let playing=false;document.getElementById('playAll').onclick=async()=>{if(playing)return;playing=true;document.getElementById('stopAll').disabled=false;for(let i=0;i<ABC.length&&playing;i++){await speakCard(i);if(!document.getElementById('autoAdvance').checked)break;}playing=false;document.getElementById('stopAll').disabled=true;};
+document.getElementById('stopAll').onclick=()=>{playing=false;speechSynthesis.cancel();document.getElementById('stopAll').disabled=true;};
+</script>
+</body>
+</html>
